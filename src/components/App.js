@@ -1,7 +1,7 @@
 import {data} from '../data';
 import Navbar from './Navbar';
 import Moviecard from "./Moviecard";
-import {addMovies} from '../actions';
+import {addMovies, setToFavourites} from '../actions';
 import React from 'react';
 class App extends React.Component {
 
@@ -17,21 +17,40 @@ class App extends React.Component {
     store.dispatch(addMovies(data));
     console.log(store.getState());
   }
+  isFavourite = (movie)=>{
+    const {favourites}=this.props.store.getState();
+    const index=favourites.indexOf(movie);
+
+    if(index !== -1)
+      return true;
+    return false;
+  }
+  showFavourites=(val)=>{
+    this.props.store.dispatch(setToFavourites(val));
+  }
   render(){
-      const movies=this.props.store.getState();
+      const {list,favourites,showFavourites}=this.props.store.getState();
+      const displayMovies= showFavourites ? favourites : list;
+      console.log("RENDER", this.props.store.getState());
       return (
       <div className="App">
         <Navbar/>
         <div className="main">
           <div className="tabs">
-            <div className="tab">Movies</div>
-            <div className="tab">Favourites</div> 
+            <div className={ `tab ${!showFavourites ? 'active-tabs': '' }`} onClick={()=>{this.showFavourites(false)}} >Movies</div>
+            <div className={ `tab ${!showFavourites ? '': 'active-tabs'}` } onClick={()=>{this.showFavourites(true)}} >Favourites</div> 
           </div>
           <div className="list">
-            {movies.map((movie,index) => (
-              <Moviecard movie={movie} key={`movie-${index}`}/>
+            {displayMovies.map((movie,index) => (
+              <Moviecard 
+                movie={movie}
+                key={`movie-${index}`}
+                dispatch= {this.props.store.dispatch}
+                isFavourite = {this.isFavourite(movie)}
+              />
             ))}
           </div>
+          {displayMovies.length ===0 ? <div className="no-movies">No movie(s) to show.</div> : null }
         </div> 
       </div>
   );}
